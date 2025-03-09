@@ -1,0 +1,53 @@
+#home {
+  display: none;
+}
+#jobs {
+  display: none;
+}
+#profiles {
+  display: none;
+}
+.nav-link {
+  cursor: pointer;
+}
+.table-hover tbody tr:hover {
+  cursor: pointer;
+}
+.log-display {
+  display: none;
+}
+
+.navbar-brand {
+  cursor: pointer;
+}
+.h2 {
+  border-left: 7px solid #212529;
+  padding-left: 15px;
+}
+.h4 {
+  border-left: 5px solid #212529;
+  padding-left: 15px;
+}
+.gs-jobs {
+  background-image: url('/img/getting_started_jobs.png');
+  background-size: contain;
+  background-position: right;
+  background-repeat: no-repeat;
+  cursor: default;
+}
+.gs-profiles {
+  background-image: url('/img/getting_started_profiles.png');
+  background-size: contain;
+  background-position: right;
+  background-repeat: no-repeat;
+  cursor: default;
+}
+.gs-profiles .card-text, .gs-jobs .card-text {
+  margin-right: 80px;
+}
+.accordion-button{
+  --bs-accordion-active-bg: #e9ecef;
+}
+.resolved-schedule {
+  font-style: italic;
+}

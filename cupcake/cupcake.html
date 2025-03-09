@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Cupcake S3</title>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/fontawesome.min.css">
+    <link rel="stylesheet" href="css/all.min.css">
+    <link rel="stylesheet" href="css/cupcake.css">
+    <script src="js/bootstrap.bundle.min.js" defer></script>
+    <script src="js/vue.global.prod.js" defer></script>
+    <script src="js/cronstrue.min.js" defer></script>
+    <script src="js/cupcake.js" defer></script>
+</head>
+<body>
+  <div id="app">
+
+<!-- navbar -->
+
+    <nav class="navbar navbar-expand navbar-dark bg-dark mb-4">
+      <div class="container-fluid">
+        <div class="navbar-brand" @click="switchPage('Home')">
+          <img src="img/logo.png" alt="Cupcake S3" width="30" height="30" class="d-inline-block align-text-top">&nbsp;&nbsp;
+          {{ title }}
+        </div>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarCollapse">
+          <ul class="navbar-nav me-auto mb-2 mb-md-0">
+            <li class="nav-item" v-for="navItem in navBar" @click="switchPage(navItem)">
+              <a class="nav-link" :class="{ active: currentPage === navItem }">{{ navItem }}</a>
+            </li>
+          </ul>
+          <div class="d-flex">
+            <a target="_blank" :href="githubUrl">
+              <button class="btn btn-outline-secondary me-1">
+                <i class="fa-brands fa-github"></i>
+              </button>
+            </a>
+            <button v-if="health.status == 'tasty'" type="button" class="btn btn-outline-success me-0" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-html="true" :data-bs-title="health.msg">
+              <i class="fa-solid fa-heart-circle-check"></i>
+            </button>
+            <button v-if="health.status == 'spoiled'" type="button" class="btn btn-outline-danger me-0" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-html="true" :data-bs-title="health.msg">
+              <i class="fa-solid fa-heart-circle-exclamation"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+<!-- page: home -->
+
+    <div id="home" class="container-fluid">
+      <div class="px-4 py-5 my-5 text-center">
+        <img class="d-block mx-auto mb-4" src="/img/logo.png" alt="Cupcake S3" width="240" height="239">
+        <h1 class="display-5 fw-bold">Cupcake S3</h1>
+        <div class="col-lg-6 mx-auto">
+          <p class="lead mb-4">
+          Your sweet solution for managing transfers to and from your AWS S3 buckets. Imagine it as your personal bakery for data! You can bake up scheduled transfer jobs, setting them to rise at just the right time, and frost them with secure AWS credential profiles. No more messy data spills! Cupcake S3 makes your S3 management a piece of cake... or should we say, a piece of cupcake!
+          </p>
+          <div class="container-xxl px-4 py-5">
+            <h2 class="pb-2 border-bottom">Getting Started</h2>
+            <div class="row align-items-md-stretch text-start pt-3">
+              <div class="col-md-6 pb-5">
+                <div class="card h-100">
+                  <h5 class="card-header">Profiles</h5>
+                  <div class="card-body gs-profiles">
+                    <p class="card-text">Create profiles to store AWS access keys. Profiles are used by your jobs to provide access to AWS S3.</p>
+                    <button class="btn btn-primary" type="button" @click="switchPage('Profiles')">Create a Profile</button>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6 pb-5">
+                <div class="card h-100">
+                  <h5 class="card-header">Jobs</h5>
+                  <div class="card-body gs-jobs">
+                    <p class="card-text">Create jobs using standard cron expressions to schedule data transfers to or from AWS S3 Buckets.</p>
+                    <button class="btn btn-primary" type="button" @click="switchPage('Jobs')">Create a Job</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <h2 class="pb-2 border-bottom">Setup AWS</h2>
+            <div class="row row-cols-1 row-cols-md-3 mb-4 text-center pt-2">
+              <div class="col py-2">
+                <div class="card mb-1 rounded-3 shadow-sm h-100">
+                  <div class="card-header py-3">
+                    <h5 class="my-0 fw-normal">Bucket</h5>
+                  </div>
+                  <div class="card-body text-start">
+                    <div class="pb-2">
+                      Create an S3 bucket in your AWS account.
+                    </div>
+                    <div class="py-2" style="border-top:1px solid #d0d0d0;">Recommended Actions:</div>
+                    <ul class="list mt-3 mb-4">
+                      <li>Enable versioning</li>
+                      <li>Block all public access (default)</li>
+                      <li>Lifecycle policy to remove older versions</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <div class="col py-2">
+                <div class="card mb-1 rounded-3 shadow-sm h-100">
+                  <div class="card-header py-3">
+                    <h5 class="my-0 fw-normal">Role</h5>
+                  </div>
+                  <div class="card-body text-start">
+                    <div class="pb-2">
+                      Create a role to allow your user to access your bucket.
+                    </div>
+                    <div class="py-2" style="border-top:1px solid #d0d0d0;">Recommended Actions:</div>
+                    <ul class="list mt-3 mb-4">
+                      <li>Limit the role to only the required permissions.</li>
+                      <li>Limit the role to only the required bucket(s).</li>
+                      <li>Add IP restrictions if possible.</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <div class="col py-2">
+                <div class="card mb-1 rounded-3 shadow-sm h-100">
+                  <div class="card-header py-3">
+                    <h5 class="my-0 fw-normal">User</h5>
+                  </div>
+                  <div class="card-body text-start">
+                    <div class="pb-2">
+                      Create a user, attach the role and generate access keys.
+                    </div>
+                    <div class="py-2" style="border-top:1px solid #d0d0d0;">Recommended Actions:</div>
+                    <ul class="list mt-3 mb-4">
+                      <li>Limit the user policy to only be able to assume the role.</li>
+                      <li>Rotate the access keys on occasion</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="card w-100 mb-4 bg-light">
+              <div class="card-body mb-1">
+                <h5 class="card-title">Quick Start</h5>
+                <p class="card-text">Download a curated CloudFormation template to quickly setup your AWS environment.</p>
+                <a href="/download/cupcake.yml" class="btn btn-primary">Download CloudFormation Template</a>
+                <p class="text-muted pt-3">For detailed instructions, please refer to the <a target="_blank" :href="githubUrl">GitHub</a> repository.</p>
+              </div>
+            </div>
+            <div class="card w-100 mb-3 bg-light">
+              <div class="card-body mb-1">
+                <h5 class="card-title">S3 Storage Classes</h5>
+                <p class="card-text">Visit <a target="_blank" href="https://aws.amazon.com/s3/storage-classes/">AWS S3 Storage Classes</a> to learn more about the different storage classes available.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+<!-- page: jobs -->
+
+    <div id="jobs" class="container-fluid">
+      <div class="modal modal-sheet position-fixed p-4 py-md-5" tabindex="-1" role="dialog" :class="{ show: modalJobVisible, 'd-block': modalJobVisible }">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content rounded-4 shadow">
+            <div class="modal-header p-5 pb-4 border-bottom-0">
+              <h1 class="fw-bold mb-0 fs-2">Create a new Job</h1>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" @click="hideJobModal"></button>
+            </div>
+            <div class="modal-body p-5 pt-0">
+              <form @submit.prevent="addJob">
+                <div class="form-floating mb-3">
+                  <input type="text" class="form-control rounded-3" id="newJobName" placeholder="music" v-model="newJob.name">
+                  <label for="newJobName">Job Name</label>
+                  <div class="form-text">The name of the job.</div>
+                </div>
+                <div class="form-floating mb-3">
+                  <input type="text" class="form-control rounded-3" id="newJobSchedule" placeholder="*/30 * * * *" v-model="newJob.schedule" @input="resolveCron">
+                  <label for="newJobSchedule">Schedule (m h d m w)</label>
+                  <div class="form-text">
+                    <div class="resolved-schedule"></div>
+                    Use a standard cron expression to schedule the job.
+                    <a target="_blank" tabindex="-1" href="https://crontab.guru/">Crontab Guru</a> can help you create a cron expression.
+                  </div>
+                </div>
+                <div class="form-floating mb-3">
+                  <input type="text" class="form-control rounded-3" id="newJobSource" placeholder="/data/music" v-model="newJob.source">
+                  <label for="newJobSource">Source</label>
+                  <div class="form-text">The source path to transfer data from. This can be a local path or an S3 path.</div>
+                </div>
+                <div class="form-floating mb-3">
+                  <input type="text" class="form-control rounded-3" id="newJobDestination" placeholder="s3://cupcake-music" v-model="newJob.destination">
+                  <label for="newJobDestination">Destination</label>
+                  <div class="form-text">The destination path to transfer data to. This can be an S3 path or a local path.</div>
+                </div>
+                <div class="form-floating mb-3">
+                  <input type="text" class="form-control rounded-3" id="newJobProfile" placeholder="cupcake-music-creds" v-model="newJob.profile">
+                  <label for="newJobProfile">Profile</label>
+                  <div class="form-text">The profile to use for the job. This profile must be
+                      created in the <a tabindex="-1" href="/#/profiles">Profiles</a> page.</div>
+                </div>
+                <div class="form-floating mb-3">
+                  <select class="form-select" id="newJobStorageClass" v-model="newJob.storage_class">
+                    <option value="STANDARD">Standard</option>
+                    <option value="INTELLIGENT_TIERING">Intelligent-Tiering</option>
+                    <option value="ONEZONE_IA">One Zone IA</option>
+                    <option value="STANDARD_IA">Standard IA</option>
+                    <option value="REDUCED_REDUNDANCY">Reduced Redundancy Storage</option>
+                    <option value="GLACIER_IR">Glacier Instant Retrieval</option>
+                    <option value="GLACIER">Glacier Flexible Retrieval</option>
+                    <option value="DEEP_ARCHIVE">Glacier Deep Archive</option>
+                  </select>
+                  <label for="newJobStorageClass">Storage Class</label>
+                  <div class="form-text">Learn more about <a target="_blank" tabindex="-1" href="https://aws.amazon.com/s3/storage-classes/">AWS S3 Storage Classes</a>.</div>
+                </div>
+                <button class="w-100 mb-2 btn btn-lg rounded-3 btn-primary" type="submit">Create Job</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+        <h1 class="h2">Jobs</h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+          <div class="btn-group mr-2">
+            <button type="button" class="btn btn-sm btn-outline-primary" @click="showJobModal">
+              <i class="fa-regular fa-square-plus"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="table align-middle table-hover mb-0 border">
+          <thead class="text-nowrap">
+            <tr class="">
+              <th class="bg-body-secondary text-center">
+                <i class="fa-regular fa-clock"></i>
+              </th>
+              <th class="bg-body-secondary">Name</th>
+              <th class="bg-body-secondary">Details</th>
+              <th class="bg-body-secondary text-center">Schedule</th>
+              <th class="bg-body-secondary text-center">Options</th>
+              <th class="bg-body-secondary">Activity</th>
+            </tr>
+          </thead>
+          <tbody class="">
+            <tr class="" v-for="entry in jobs" :key="entry.name" @click="toggleDetails(entry.name)">
+              <td class="text-center text-nowrap">
+                <div class="dropdown">
+                  <button class="btn btn-sm" type="button" id="dropdownJobsMenuButton" data-bs-toggle="dropdown" aria-expanded="false" @click.stop>
+                    <i class="fa-solid fa-ellipsis-vertical"></i>
+                  </button>
+                  <ul class="dropdown-menu" aria-labelledby="dropdownJobsMenuButton">
+                    <!--
+                    <li><a class="dropdown-item" @click.stop="editJob(entry.name)">Edit</a></li>
+                    -->
+                    <li><a class="dropdown-item" @click.stop="deleteJob(entry.name)">Delete</a></li>
+                  </ul>
+                </div>
+              </td>
+              <td class="text-nowrap">
+                <div class="fw-semibold">{{ entry.name }}</div>
+              </td>
+              <td class="text-nowrap">
+                <div><strong>Source: </strong>{{ entry.source }}</div>
+                <div><strong>Destination: </strong>{{ entry.destination }}</div>
+              </td>
+              <td class="text-center text-nowrap">
+                {{ entry.schedule }}
+              </td>
+              <td class="text-center">
+                <span class="m-1 badge bg-secondary">{{ entry.storage_class }}</span>
+                <span class="m-1 badge bg-danger">
+                  <i class="fa-regular fa-trash-can"></i>
+                </span>
+              </td>
+              <td class="">
+                <div class="small text-body-secondary">Last run</div>
+                <div class="fw-semibold text-nowrap">{{ entry.last_run_ago }}</div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 mt-5 border-bottom">
+        <h4 class="h4">Logs</h4>
+        <div class="btn-toolbar mb-2 mb-md-0">
+          <div class="btn-group mr-2 text-muted small">
+            <div class="text-muted px-2" title="Upload"><i class="fa-regular fa-circle-up"></i> {{ selectedJob.uploaded }}</div>
+            <div class="text-muted px-2" title="Download"><i class="fa-regular fa-circle-down"></i> {{ selectedJob.downloaded }}</div>
+            <div class="text-muted px-2" title="Deleted"><i class="fa-regular fa-circle-xmark"></i> {{ selectedJob.deleted }}</div>
+          </div>
+        </div>
+      </div>
+      <div class="accordion log-display mt-3" id="logDisplay">
+        <div class="accordion-item bg-light">
+          <h2 class="accordion-header">
+            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseOne" aria-expanded="true" aria-controls="panelsStayOpen-collapseOne">
+              Live Tail
+            </button>
+          </h2>
+          <div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse show">
+            <pre class="accordion-body p-2">{{ logContent }}</pre>
+          </div>
+        </div>
+        <div class="accordion-item" v-for="(entry, idx) in logs.logs">
+          <h2 class="accordion-header" @click="showJobLog(showingLog, idx)">
+            <button class="accordion-button collapsed oldlog-header" type="button" data-bs-toggle="collapse" :data-bs-target="'#log-' + idx" aria-expanded="false" :aria-controls="'#log-' + idx">
+              {{ entry }}
+            </button>
+          </h2>
+          <div :id="'log-' + idx" class="accordion-collapse collapse oldlog-log">
+            <pre class="accordion-body oldlog-content" :id="'logbody-' + idx">
+            </pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+<!-- page: profiles -->
+
+    <div id="profiles" class="container-fluid">
+      <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+        <h1 class="h2">Profiles</h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+          <div class="btn-group mr-2">
+            <button type="button" class="btn btn-sm btn-outline-primary" @click="showProfileModal">
+              <i class="fa-regular fa-square-plus"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="modal modal-sheet position-fixed p-4 py-md-5" tabindex="-1" role="dialog" :class="{ show: modalProfileVisible, 'd-block': modalProfileVisible }">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content rounded-4 shadow">
+            <div class="modal-header p-5 pb-4 border-bottom-0">
+              <h1 class="fw-bold mb-0 fs-2">Create a new Profile</h1>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" @click="hideProfileModal"></button>
+            </div>
+            <div class="modal-body p-5 pt-0">
+              <form @submit.prevent="addProfile">
+                <div class="form-floating mb-3">
+                  <input type="text" class="form-control rounded-3" id="newProfileName" placeholder="cupcake-music-creds" v-model="newProfile.name">
+                  <label for="newProfileName">Name</label>
+                  <div class="form-text">The name of the profile.</div>
+                </div>
+                <div class="form-floating mb-3">
+                  <input type="text" class="form-control rounded-3" id="newProfileAccessKeyId" placeholder="* * * * *" v-model="newProfile.aws_access_key_id">
+                  <label for="newProfileAccessKeyId">Access Key ID</label>
+                  <div class="form-text">The access key ID for the profile.</div>
+                </div>
+                <div class="form-floating mb-3">
+                  <input type="text" class="form-control rounded-3" id="newProfileSecretAccessKey" placeholder="/data/music" v-model="newProfile.aws_secret_access_key">
+                  <label for="newProfileSecretAccessKey">Secret Access Key</label>
+                  <div class="form-text">The secret access key for the profile.</div>
+                </div>
+                <div class="form-floating mb-3">
+                  <input type="text" class="form-control rounded-3" id="newProfileRegion" placeholder="s3://cupcake-music" v-model="newProfile.region">
+                  <label for="newProfileRegion">Region</label>
+                  <div class="form-text">The region to use for the profile.</div>
+                </div>
+                <div class="form-floating mb-3">
+                  <input type="text" class="form-control rounded-3" id="newProfileRoleArn" placeholder="arn:aws:iam::096083733316:role/cupcake-user-role" v-model="newProfile.role_arn">
+                  <label for="newProfileRoleArn">Role Arn</label>
+                  <div class="form-text">The role ARN to use for the profile.</div>
+                </div>
+                <button class="w-100 mb-2 btn btn-lg rounded-3 btn-primary" type="submit">Create Profile</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="table align-middle table-hover mb-0 border">
+          <thead class="text-nowrap">
+            <tr class="">
+              <th class="bg-body-secondary text-center">
+                <i class="fa-solid fa-user-secret"></i>
+              </th>
+              <th class="bg-body-secondary">Name</th>
+              <th class="bg-body-secondary">Access Keys</th>
+              <th class="bg-body-secondary text-center">Region</th>
+              <th class="bg-body-secondary">Role Arn</th>
+            </tr>
+          </thead>
+          <tbody class="">
+            <tr class="" v-for="entry in profiles" :key="entry.name">
+              <td class="text-center">
+                <div class="dropdown">
+                  <button class="btn btn-sm" type="button" id="dropdownProfileMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fa-solid fa-ellipsis-vertical"></i>
+                  </button>
+                  <ul class="dropdown-menu" aria-labelledby="dropdownProfileMenuButton">
+                    <!--
+                    <li><a class="dropdown-item" @click.stop="editProfile(entry.name)">Edit</a></li>
+                    -->
+                    <li><a class="dropdown-item" @click.stop="deleteProfile(entry.name)">Delete</a></li>
+                  </ul>
+                </div>
+              </td>
+              <td class="">
+                <div class="fw-semibold">{{ entry.name }}</div>
+              </td>
+              <td class="text-nowrap">
+                <div>{{ entry.aws_access_key_id }}</div>
+                <div class="text-muted">{{ entry.aws_secret_access_key }}</div>
+              </td>
+              <td class="text-center text-nowrap">
+                {{ entry.region}}
+              </td>
+              <td class="">
+                {{ entry.role_arn }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+<!-- footer -->
+
+    <footer></footer>
+
+  </div>
+</body>
+</html>

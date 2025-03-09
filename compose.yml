@@ -1,0 +1,18 @@
+---
+services:
+  cupcake-s3:
+    image: cupcake-s3
+    container_name: cupcake-s3
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - 3124:3124
+    environment:
+      TZ: America/New_York
+    volumes:
+      - ./cupcake:/cupcake
+      - ./_run/creds:/root/.aws
+      - ./_run/cron:/etc/cron.d
+      - ./_run/log:/var/log/cupcake
