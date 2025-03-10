@@ -33,7 +33,7 @@ app.mount("/css", StaticFiles(directory=CSS_PATH), name="css")
 app.mount("/img", StaticFiles(directory=IMG_PATH), name="img")
 app.mount("/webfonts", StaticFiles(directory=WEBFONTS_PATH), name="webfonts")
 
-class BackupJob(BaseModel):
+class CupcakeJob(BaseModel):
     """Model for backup cron job."""
     name: str
     schedule: str
@@ -65,6 +65,10 @@ class JobsHandler(FileSystemEventHandler):
     def on_deleted(self, event):
         asyncio.run(notify_websockets(self.data()))
 
+def sanitize_path(*args):
+    """Sanitize path."""
+    return os.path.normpath(os.path.join(*args))
+
 @app.get("/", response_class=FileResponse)
 async def root_home():
     """Serves the cupcake."""
@@ -79,7 +83,7 @@ async def favicon():
 async def download_cloudformation_template():
     """Downloads the CloudFormation template."""
     filename = "cupcake.yml"
-    file_path = os.path.join(FRONTEND_PATH, CLOUDFORMATION_DIR, filename)
+    file_path = sanitize_path(FRONTEND_PATH, CLOUDFORMATION_DIR, filename)
     if not os.path.exists(file_path):
         raise HTTPException(status_code=404, detail="CloudFormation template not found")
     return FileResponse(file_path, filename=filename, media_type="application/octet-stream")
@@ -123,9 +127,9 @@ async def api_get_jobs():
     return await get_jobs()
 
 @app.post("/api/job", response_class=JSONResponse)
-async def api_add_job(backup_job: BackupJob):
+async def api_add_job(job: CupcakeJob):
     """Adds a new job."""
-    return create_job(backup_job)
+    return create_job(job)
 
 @app.delete("/api/job/{job}", response_class=JSONResponse)
 async def api_delete_job(job: str):
@@ -150,12 +154,12 @@ async def api_get_log(job: str, num: int):
         log_file = f"{job}.log.{num}"
     return FileResponse(get_log(log_file))
 
-@app.websocket("/api/job/{job}/log/latest")
-async def logs_ws_endpoint(websocket: WebSocket, job: str):
+@app.websocket("/api/job/{name}/log/latest")
+async def logs_ws_endpoint(websocket: WebSocket, name: str):
     """WebSocket for tailing logs."""
     await websocket.accept()
     try:
-        log_file = os.path.join(LOG_DIR, f"{job}.log")
+        log_file = sanitize_path(LOG_DIR, f"{name}.log")
         await websocket.send_text(f"Tailing log file: {log_file} ...")
         process = await asyncio.create_subprocess_shell(
             f"tail -n 200 -F {log_file}",
@@ -260,7 +264,7 @@ async def health_watcher():
         while True:
             data = await websocket_data()
             await notify_websockets(data)
-            await asyncio.sleep(10)
+            await asyncio.sleep(30)
     except asyncio.CancelledError:
         print("Health watcher cancelled")
     except KeyboardInterrupt:
@@ -363,9 +367,9 @@ async def get_health():
     """
     return health
 
-async def get_stats(job: str):
+async def get_stats(name: str):
     """Retrieves stats for a job."""
-    stats_file = os.path.join(LOG_DIR, f"{job}.stats")
+    stats_file = sanitize_path(LOG_DIR, f"{name}.stats")
     stats = {}
     if os.path.exists(stats_file):
         with open(stats_file, "r", encoding='utf-8') as f:
@@ -380,7 +384,7 @@ async def get_jobs():
     entries = []
     try:
         for filename in os.listdir(CRON_DIR):
-            filepath = os.path.join(CRON_DIR, filename)
+            filepath = sanitize_path(CRON_DIR, filename)
             if os.path.isfile(filepath):
                 details = parse_cron_file(filepath)
                 stats = await get_stats(details['name'])
@@ -389,24 +393,24 @@ async def get_jobs():
         print(f"Directory {CRON_DIR} not found.")
     return entries
 
-def create_job(backup_job: BackupJob):
+def create_job(job: CupcakeJob):
     """Creates a cron job."""
-    name = backup_job.name
-    schedule = backup_job.schedule
-    log_file = os.path.join(LOG_DIR, f"{name}.log")
-    stats_file = os.path.join(LOG_DIR, f"{name}.stats")
+    name = job.name
+    schedule = job.schedule
+    log_file = sanitize_path(LOG_DIR, f"{name}.log")
+    stats_file = sanitize_path(LOG_DIR, f"{name}.stats")
 
     command_arguments = {
-        "--source": backup_job.source,
-        "--destination": backup_job.destination,
+        "--source": job.source,
+        "--destination": job.destination,
         "--log-retention": "3",
-        "--profile": backup_job.profile,
-        "--storage-class": backup_job.storage_class,
+        "--profile": job.profile,
+        "--storage-class": job.storage_class,
         "--delete": ""
     }
 
     user = "root"
-    cron_file = os.path.join(CRON_DIR, name)
+    cron_file = sanitize_path(CRON_DIR, name)
 
     command_args = ""
     for key, value in command_arguments.items():
@@ -428,32 +432,32 @@ def create_job(backup_job: BackupJob):
 
 def delete_job(name: str):
     """Deletes a cron job."""
-    cron_file = os.path.join(CRON_DIR, name)
+    cron_file = sanitize_path(CRON_DIR, name)
     try:
         os.remove(cron_file)
         for filename in os.listdir(LOG_DIR):
             if filename.startswith(name):
-                os.remove(os.path.join(LOG_DIR, filename))
+                os.remove(sanitize_path(LOG_DIR, filename))
         return {"message": "Job deleted successfully"}
     except FileNotFoundError as e:
         raise HTTPException(status_code=404, detail="Job not found") from e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
 
-def get_logs(job: str):
+def get_logs(name: str):
     """Retrieves logs for a job.
 
     Example: job.log job.log.1 job.log.2
     """
     logs = []
     for filename in os.listdir(LOG_DIR):
-        if filename.startswith(f"{job}.log"):
-            logs.append(os.path.join(LOG_DIR, filename))
-    return {"name": job, "count": len(logs), "logs": list(reversed(logs))[1:]}
+        if filename.startswith(f"{name}.log"):
+            logs.append(sanitize_path(LOG_DIR, filename))
+    return {"name": name, "count": len(logs), "logs": list(reversed(logs))[1:]}
 
 def get_log(log_file: str):
     """Retrieves a log file."""
-    return os.path.join(LOG_DIR, log_file)
+    return sanitize_path(LOG_DIR, log_file)
 
 def aws_configuration_paths():
     """
