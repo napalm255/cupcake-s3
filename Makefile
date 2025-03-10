@@ -24,6 +24,17 @@ update-dependencies:
 	curl -sL https://cdn.jsdelivr.net/npm/cronstrue@2/dist/cronstrue.min.js -o cupcake/js/cronstrue.min.js
 	@pipenv update
 
+lint:
+	@echo ">> Linting cupcake/cupcake.py"
+	@pushd cupcake; \
+		pylint --output-format json2 --fail-under 10 cupcake.py; \
+		popd
+	@echo ">> Linting yaml"
+	@yamllint --strict -f github . \
+		&& echo ">> Linting yaml: OK"
+	@echo ">> Linting cloudformation"
+	@cfn-lint --info cupcake/cloudformation/cupcake.yml
+
 build: update-version
 	@echo ">> Generating requirements.txt"
 	@pipenv requirements > requirements.txt
