@@ -1,0 +1,9 @@
+# yamllint configuration
+# vi:syntax=yaml
+
+---
+extends: default
+
+rules:
+  line-length: disable
+  truthy: disable
