@@ -138,6 +138,6 @@ On first login (and if you haven't setup a job or profile yet), you will be dire
 
 * Treat your access keys and secret keys like passwords. Do not share them or expose them in your client facing code.
 
-### Getting Support
+## Getting Support
 
 1. [Found a bug?](https://github.com/napalm255/cupcake-s3/issues)
