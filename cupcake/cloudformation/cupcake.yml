@@ -10,18 +10,18 @@ Metadata:
     ParameterGroups:
       - Label: S3 Configuration
         Parameters:
-          - BucketName
           - CreateBucket
+          - BucketName
       - Label: IAM Configuration
         Parameters:
           - UserName
           - EnableIPRestriction
           - AllowedIPRange
     ParameterLabels:
-      BucketName:
-        default: S3 Bucket Name
       CreateBucket:
         default: Create New S3 Bucket?
+      BucketName:
+        default: S3 Bucket Name
       UserName:
         default: IAM User Name
       EnableIPRestriction:
@@ -30,9 +30,6 @@ Metadata:
         default: Allowed IP Range (CIDR)
 
 Parameters:
-  BucketName:
-    Type: String
-    Description: Name of the S3 bucket. Leave empty to auto-generate.
   CreateBucket:
     Type: String
     Description: Whether to create a new S3 bucket.
@@ -40,6 +37,9 @@ Parameters:
       - "true"
       - "false"
     Default: "false"
+  BucketName:
+    Type: String
+    Description: Name of the S3 bucket. Leave empty to auto-generate.
   UserName:
     Type: String
     Description: Name of the IAM user to create. Leave empty to auto-generate.
@@ -82,9 +82,10 @@ Resources:
           - Id: RetainVersions
             Status: Enabled
             NoncurrentVersionExpiration:
+              NoncurrentDays: 2
               NewerNoncurrentVersions: 3
-              NoncurrentDays: 30
     DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
 
   IAMUser:
     Type: AWS::IAM::User
@@ -118,7 +119,14 @@ Resources:
           - Effect: Allow
             Principal:
               AWS: !GetAtt IAMUser.Arn
-            Action: sts:AssumeRole
+            Action:
+              - sts:AssumeRole
+            Condition:
+              Fn::If:
+                - RestrictIP
+                - IpAddress:
+                    aws:SourceIp: !Ref AllowedIPRange
+                - !Ref "AWS::NoValue"
       Policies:
         - PolicyName: S3AccessPolicy
           PolicyDocument:
@@ -131,22 +139,13 @@ Resources:
                   - s3:DeleteObject
                   - s3:ListBucket*
                 Resource:
-                  - !Sub arn:aws:s3:::${BucketName}
-                  - !Sub arn:aws:s3:::${BucketName}/*
-              - !If
-                - RestrictIP
-                - Effect: Deny
-                  Action: s3:*
-                  Resource: !Sub arn:aws:s3:::${BucketName}/*
-                  Condition:
-                    NotIpAddress:
-                      "aws:SourceIp": !Ref AllowedIPRange
-                - Ref: AWS::NoValue
+                  - !If [CreateNewBucket, !Sub "arn:aws:s3:::${S3Bucket}", !Sub "arn:aws:s3:::${BucketName}"]
+                  - !If [CreateNewBucket, !Sub "arn:aws:s3:::${S3Bucket}/*", !Sub "arn:aws:s3:::${BucketName}/*"]
 
 Outputs:
   BucketName:
     Description: Name of the S3 bucket.
-    Value: !Ref S3Bucket
+    Value: !If [CreateNewBucket, !Ref S3Bucket, !Ref BucketName]
 
   IAMUserName:
     Description: Name of the IAM user.
