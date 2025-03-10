@@ -26,9 +26,7 @@ update-dependencies:
 
 lint:
 	@echo ">> Linting cupcake/cupcake.py"
-	@pushd cupcake; \
-		pylint --output-format json2 --fail-under 10 cupcake.py; \
-		popd
+	@pylint --output-format json2 --fail-under 10 cupcake/cupcake.py
 	@echo ">> Linting yaml"
 	@yamllint --strict -f github . \
 		&& echo ">> Linting yaml: OK"
