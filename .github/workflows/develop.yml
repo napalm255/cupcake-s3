@@ -23,12 +23,6 @@ jobs:
           pip install pipenv
           pipenv requirements > requirements.txt
 
-      - name: Determine docker tag
-        id: docker_tag
-        run: |
-          echo "tag=dev" >> $GITHUB_OUTPUT
-          echo "version=dev-$(cat VERSION)" >> $GITHUB_OUTPUT
-
       - name: Login to github packages
         uses: docker/login-action@v3
         with:
@@ -44,4 +38,3 @@ jobs:
           push: true
           tags: |
             ghcr.io/${{ github.repository_owner }}/cupcake-s3:develop
-            ghcr.io/${{ github.repository_owner }}/cupcake-s3:${{ steps.docker_tag.outputs.version }}
