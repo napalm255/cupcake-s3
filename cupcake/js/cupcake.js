@@ -145,12 +145,11 @@ createApp({
         }
 
         const cupcakeSprinkles = async () => {
-          const wsProtocol = await serverWsProtocol();
           if (cupcakeSocket) {
             cupcakeSocket.close();
           }
 
-          cupcakeSocket = new WebSocket(`${wsProtocol}://${serverHost}:${serverPort}/ws/cupcake`);
+          cupcakeSocket = new WebSocket(`${serverWsProtocol}://${serverHost}:${serverPort}/ws/cupcake`);
           // console.log('Cupcake WebSocket created', cupcakeSocket);
 
           cupcakeSocket.onmessage = (event) => {
@@ -318,14 +317,13 @@ createApp({
             }
 
         const showLog = async (job, logDisplay) => {
-          const wsProtocol = await serverWsProtocol();
           if (socket) {
             socket.close();
           }
 
           showingLog.value = job;
           logContent.value = '';
-          socket = new WebSocket(`{${wsProtocol}://${serverHost}:${serverPort}/api/job/${job}/log/latest`);
+          socket = new WebSocket(`{${serverWsProtocol}://${serverHost}:${serverPort}/api/job/${job}/log/latest`);
           // console.log('WebSocket created', socket);
 
           socket.onmessage = (event) => {
