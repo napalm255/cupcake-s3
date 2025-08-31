@@ -19,7 +19,7 @@ createApp({
         const tooltipList = ref([]);
         const serverHost = computed(() => window.location.hostname);
         const serverPort = computed(() => window.location.port || (window.location.protocol === 'https:' ? '443' : '80'));
-        const serverWsProtocol = computed(() => window.location.protocol === 'https:' ? 'wss:' : 'ws:');
+        const serverWsProtocol = computed(() => window.location.protocol === 'https:' ? 'wss' : 'ws');
         let socket = null
         let cupcakeSocket = null
         let reconnectInterval = 10000; // Initial delay
