@@ -323,7 +323,7 @@ createApp({
 
           showingLog.value = job;
           logContent.value = '';
-          socket = new WebSocket(`{${serverWsProtocol.value}://${serverHost.value}:${serverPort.value}/api/job/${job}/log/latest`);
+          socket = new WebSocket(`${serverWsProtocol.value}://${serverHost.value}:${serverPort.value}/api/job/${job}/log/latest`);
           // console.log('WebSocket created', socket);
 
           socket.onmessage = (event) => {
