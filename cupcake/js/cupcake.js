@@ -17,6 +17,9 @@ createApp({
         const showingLog = ref("");
         const tooltipTriggerList = ref([]);
         const tooltipList = ref([]);
+        const serverHost = computed(() => window.location.hostname);
+        const serverPort = computed(() => window.location.port || (window.location.protocol === 'https:' ? '443' : '80'));
+        const serverWsProtocol = computed(() => window.location.protocol === 'https:' ? 'wss:' : 'ws:');
         let socket = null
         let cupcakeSocket = null
         let reconnectInterval = 10000; // Initial delay
@@ -53,14 +56,6 @@ createApp({
           region: "",
           role_arn: ""
         });
-
-        const serverPort = async () => {
-          return window.location.port || (window.location.protocol === 'https:' ? '443' : '80');
-        };
-
-        const serverHost = async () => {
-          return window.location.hostname;
-        }
 
         const showJobModal = () => {
           modalJobVisible.value = true;
@@ -150,13 +145,12 @@ createApp({
         }
 
         const cupcakeSprinkles = async () => {
-          const host = await serverHost();
-          const port = await serverPort();
+          const wsProtocol = await serverWsProtocol();
           if (cupcakeSocket) {
             cupcakeSocket.close();
           }
 
-          cupcakeSocket = new WebSocket(`ws://${host}:${port}/ws/cupcake`);
+          cupcakeSocket = new WebSocket(`${wsProtocol}://${serverHost}:${serverPort}/ws/cupcake`);
           // console.log('Cupcake WebSocket created', cupcakeSocket);
 
           cupcakeSocket.onmessage = (event) => {
@@ -324,15 +318,14 @@ createApp({
             }
 
         const showLog = async (job, logDisplay) => {
-          const host = await serverHost();
-          const port = await serverPort();
+          const wsProtocol = await serverWsProtocol();
           if (socket) {
             socket.close();
           }
 
           showingLog.value = job;
           logContent.value = '';
-          socket = new WebSocket(`ws://${host}:${port}/api/job/${job}/log/latest`);
+          socket = new WebSocket(`{${wsProtocol}://${serverHost}:${serverPort}/api/job/${job}/log/latest`);
           // console.log('WebSocket created', socket);
 
           socket.onmessage = (event) => {
